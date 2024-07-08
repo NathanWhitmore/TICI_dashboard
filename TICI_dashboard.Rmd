@@ -70,6 +70,14 @@ group_points <- function(points, distance){
 }
 
 
+# is.error function (required)
+is.error <- function(expr) {
+  result <- try(expr, silent = TRUE)
+  inherits(result, "try-error")
+}
+  
+
+
 
 ```
 
@@ -80,8 +88,6 @@ NZ <- reactive({
     st_transform(crs = 4326)
   
 })
-
-
 
 ```
 
@@ -109,34 +115,21 @@ Please refer to the guide tab for help.
 fileInput("file1", "Choose xlsx file with API info",
                     multiple = FALSE)
 
-
 ```
 
-
-
-
 **Select area**
-
-
 
 * Select an area either square, circular, or a polygon area
 * The TICI data will extracted for your selected area.
 
 *Note: Inclusion of a large number of sampling locations may impact the readability of graphs*
 
-
-
-
-
 **Aggregate points **
-
 
 ```{r}
 sliderInput("precision", label = "Max distance (metres):", min = 1, 
         max = 100, value = 10, step = 1,  ticks = FALSE)
 ```
-
-
 
 **Flag position**
 
@@ -146,9 +139,12 @@ Enter sample coordinates to add marker (return to 'select area' to view).
 numericInput("lat", label ="Latitude", value = NULL)
 numericInput("long", label = "Longitude", value = NULL)
 
+debounce_lat <- reactive({input$lat}) %>% debounce(3000)
+debounce_long <- reactive({input$long}) %>% debounce(3000)
+
 point <- reactive({
   
-  point <- data.frame(long = input$long, lat = input$lat, Place = "User point")
+  point <- data.frame(long = debounce_long(), lat = debounce_lat(), Place = "User point")
   point <- st_as_sf(point, coords = c("long", "lat"), crs = 4326)
   point
   
@@ -157,6 +153,7 @@ point <- reactive({
 ```
 
 
+<br/>
 
 **Download filtered data**
 
@@ -402,18 +399,16 @@ my.leaflet <- reactive({
 })
 
 
-
-
 output$mymap <- renderLeaflet({
-  if (is.numeric(input$long) != TRUE |
-      is.numeric(input$lat) != TRUE) {
+  if (is.error(point()) == TRUE) {
+    
     my.leaflet()
     
   } else {
+    
     my.leaflet() %>%
       addMarkers(data = point())
   } 
-  
   
 })
 
@@ -749,6 +744,15 @@ my.leaflet.rec <- reactive({
         "Age:",
         recency()$Age) 
     ) %>%
+    
+    addLegend(
+      data = recency(),
+      position = "topright",
+      pal = pal,
+      values = recency()$Age,
+      title = "Days since sampling"
+    ) %>%
+    
     addScaleBar(position = "topright",
               options = scaleBarOptions(imperial = FALSE)) %>%
     addMiniMap() %>%
@@ -769,19 +773,10 @@ my.leaflet.rec <- reactive({
 })
 
 
-
-
 output$mymap.rec <- renderLeaflet({
-  if (is.numeric(input$long) != TRUE |
-      is.numeric(input$lat) != TRUE) {
+
     my.leaflet.rec()
-    
-  } else {
-    my.leaflet.rec() %>%
-      addMarkers(data = point())
-  } 
-  
-  
+
 })
 
 ```
@@ -817,7 +812,7 @@ renderUI({
   check2 <- paste("Number of API keys: ", nrow(APIs()))
 
     
-  HTML(paste(check1, check2, sep=""))
+  HTML(paste(check1, "<br/>", check2, sep=""))
   
 })
 
@@ -825,7 +820,8 @@ renderUI({
 ```
 
 
-### Guide
+
+### Guide: written
 
 **How it works**
 
@@ -887,6 +883,8 @@ Note: the base maps used in the dashboard are controlled by a 3rd party and can 
 
   * For more information please visit the [Wilderlab website](https://www.wilderlab.co.nz/) or their [TICI specific page](https://www.wilderlab.co.nz/tici) (note that the existence of these webpages in the future cannot be guaranteed).
 
+### Guide: video
 
+<div style="position: relative; padding-bottom: 56.25%; height: 0;"><iframe src="https://www.loom.com/embed/0735beed1ced4c11a6e7b0ef5879f745?sid=276bb7a8-218b-4573-9801-6ca86fcedbf2" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 80%; height: 80%;"></iframe></div>
 
 
