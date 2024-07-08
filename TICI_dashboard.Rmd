@@ -93,7 +93,8 @@ NZ <- reactive({
 
 
 
-
+Main
+=====================================
 
 
 
@@ -526,13 +527,17 @@ my.graph.data <-
 
 
 my.plot <- reactive ({
+  
+  new.graph.data  <- my.graph.data()
+  
+  new.graph.data$`TICI Rating` <- new.graph.data$TICIRating
 
   my.plot <-  ggplot(
-    my.graph.data(),
+    new.graph.data,
     aes(
       x = CollectionDate,
       y = TICI,
-      fill = TICIRating,
+      fill = `TICI Rating`,
       text = paste(
         "Collection date:",  CollectionDate,
         "\nClient ID:", ClientSampleID,
@@ -546,14 +551,13 @@ my.plot <- reactive ({
       group = `Lat-Long`
     )
   ) +
-    geom_point(shape =21, colour = "black")+
+    
     theme_bw() +
    scale_fill_manual(values =  c("red", "purple", "lightblue", "aliceblue","yellow","orange"), drop = FALSE)+
- # scale_colour_manual(values = pal, drop = FALSE) +
-    
     geom_smooth(method = "lm",
-                se = FALSE,
-                colour = "grey") +
+                se = TRUE,
+                fill = "grey") +
+    geom_point(shape = 21, colour = "black")+
     geom_point(size = 3,
                shape = 20,
                alpha = 0.7) +
@@ -570,11 +574,11 @@ my.plot <- reactive ({
       margin = margin(t = 10)
     )) +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
-    theme(plot.margin = margin(1, 1, 1.5, 1.2, "cm")) +
-    labs(colour = "TICI rating\n") +
-    ggtitle(paste("Locations given in lat long based on a", 
-    input$precision, "m aggregation"))+
+    theme(plot.margin = margin(1, 1, 1, 1, "cm")) +
+    theme(legend.title = element_text(color = "white"))+
+    ggtitle(paste(input$precision, "m aggregation (linear regression ± 95% CI)"))+
     scale_x_date(date_labels = "%d %b %Y")
+   
   
   # turn off hover info for geom_line
   my.plot <- ggplotly(my.plot, tooltip = "text") %>%   
@@ -742,7 +746,7 @@ my.leaflet.rec <- reactive({
         recency()$CollectionDate,
         "<br>",
         "Age:",
-        recency()$Age) 
+        paste(recency()$Age, "days since sampling"))
     ) %>%
     
     addLegend(
@@ -788,10 +792,13 @@ renderPlot({
   
   ggplot()+
     theme_bw()+
-    geom_histogram(data = recency(), aes(x = Time.passed), fill = "blue",
+    geom_histogram(data = recency(), aes(x = Time.passed), fill = "purple",
                    colour = "white")+
-    xlab("\nDays elapsed")+
-    ylab("Total number of samples\n")
+    xlab("\nDays since sampling")+
+    ylab("Total number of samples\n")+
+    theme(axis.title = element_text(size = 20))+
+    theme(axis.text = element_text(size = 14))+
+    theme(plot.margin = margin(1,1,1,1, "cm"))
 })
 ```
 
@@ -819,7 +826,21 @@ renderUI({
 
 ```
 
+Guides
+=====================================
 
+Column {.sidebar data-width=250}
+-------------------------------------
+
+**Viewing**
+
+Click *Open in Browser* on top lefthand side to view (if not already visible).
+
+<br/>
+
+
+Column {.tabset .tabset-fade}
+-------------------------------------
 
 ### Guide: written
 
@@ -888,3 +909,29 @@ Note: the base maps used in the dashboard are controlled by a 3rd party and can 
 <div style="position: relative; padding-bottom: 56.25%; height: 0;"><iframe src="https://www.loom.com/embed/0735beed1ced4c11a6e7b0ef5879f745?sid=276bb7a8-218b-4573-9801-6ca86fcedbf2" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 80%; height: 80%;"></iframe></div>
 
 
+Reference 
+=====================================
+
+Column {.sidebar data-width=250}
+-------------------------------------
+
+**Viewing**
+
+Click *Open in Browser* on top lefthand side to view (if not already visible).
+
+<br/>
+
+**Acknowledgements**
+
+The code for this dashboard was written by Nathan Whitmore, and is freely available for reuse and modification via an [MIT license](https://choosealicense.com/licenses/mit/). The source code can be found under the under the '</> Source Code' tab or via [GitHub](https://github.com/NathanWhitmore/TICI_dashboard). 
+
+Dashboard creation was funded by the Otago Regaional Council. Special thanks go to Scott Jarvie and Ciaran Campbell for instigating this project and Shaun Wilkinson from Wilderlab for his development of the supporting API and R package.
+
+
+Column {.tabset .tabset-fade}
+-------------------------------------
+
+```{r}
+tags$iframe(style="height:1000px; width:100%; scrolling=yes",
+src="Wilkinson et al 2024.pdf")
+```
