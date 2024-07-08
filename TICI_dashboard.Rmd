@@ -32,11 +32,10 @@ library(remotes)
 
 # requires an installation of wilderlab
 # invisible(if(!("wilderlab" %in% list.files(.libPaths())))
-remotes::install_github("wilderlabnz/wilderlab")
+# remotes::install_github("wilderlabnz/wilderlab")
 
 # requires older version of flexdashboard for operation with leaflet
-
-install_version("flexdashboard", version = "0.5.2", repos = "http://cran.us.r-project.org")
+# install_version("flexdashboard", version = "0.5.2", repos = "http://cran.us.r-project.org")
 
 
 library(tidyverse)
@@ -69,6 +68,9 @@ group_points <- function(points, distance){
   g = graph_from_adjacency_matrix(connected)
   return(components(g)$membership)
 }
+
+
+
 ```
 
 ```{r}
@@ -521,9 +523,7 @@ my.graph.data <-
     #bind
     my.data <- cbind(my.data, my.lat.long)
     
-    # add to Location
-    # my.data$Location <- paste( my.data$Location, my.data$X, my.data$Y)
-    
+    # add  Location
     my.data$`Lat-Long` <- as.character(paste(round(my.data$Y, 5), round(my.data$X, 5)))
     my.data
 
@@ -624,7 +624,8 @@ renderPlotly({
 ```{r}
 
   table.data <-reactive({
-  
+    
+    
    table.data <- my.graph.data()[, c("ClientSampleID",
                       "Lat-Long",
                        # "CollectedBy",
@@ -654,6 +655,10 @@ renderPlotly({
 
   
  renderDataTable ({
+   
+   validate(
+      need(!is.null(table.data()), "Calculating...")
+    )
    
    datatable(
     table.data() ,
@@ -800,6 +805,10 @@ renderPlot({
 
 ```{r}
 renderUI({
+  
+  validate(
+      need(!is.null(APIs()), "Calculating...")
+    )
   
   
   check1 <- paste("Names of organisations contributing API keys: ",
